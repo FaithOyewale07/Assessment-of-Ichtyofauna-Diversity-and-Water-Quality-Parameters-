@@ -1,0 +1,836 @@
+---
+title: "Water Quality Parameter Analysis of Snake Island, Lagos State"
+author: "Oluwatubosun Ajayi, Odulate D.O., Faith Oyewale OLABISI"
+format: docx
+prefer-html: true
+toc: true
+toc-title: 'Table of Content'
+toc-depth: 7
+editor: visual
+---
+
+# **Introduction**
+
+This analysis was carried out to intreprete the water physicochemical parameters data sampled from five stations located on snake island.
+
+## **Location**
+
+1.  Location 1 -\> Ibeshe,
+
+2.  Location 2 -\> Ilashe,
+
+3.  Location 3 -\> Igboalejo,
+
+4.  Location 4 -\> Igboeseyero
+
+## **Data Importation and Loading of the Libraries in R programming for Analysis.**
+
+Packages used for the analysis include the following packages: Tidyverse, dplyr, car, knitr, ggpubr, readxl and gridextra.
+
+```{r}
+#| message: false
+#| warning: false
+## Load the required Libraries
+library(tidyverse)
+library(car)
+library(readxl)
+library(ggpubr)
+library(dplyr)
+library(reshape2)
+library(knitr)
+library(corrplot)
+library(DescTools)
+library(janitor)
+library(gridExtra)
+library(kableExtra)
+```
+
+### *Data Structure and a glimpse into the Water Quality data*
+
+```{r}
+## Import the data set for Analysis
+water_quality <- read_excel('Water Quality Analysis(Mr. Bosun).xlsx')
+
+water_quality |> 
+  head(n = 4) |> 
+  kable(
+    longtable = TRUE
+  ) 
+```
+
+## *Data Cleaning and Manipulation for Analysis*
+
+```{r}
+#| echo: false
+water_quality <- water_quality |> 
+  janitor::clean_names() |> 
+  mutate(
+    stations = as.factor(stations),
+    season = as.factor(season),
+    months = as.factor(months)
+  )
+
+water_quality$months <- factor(water_quality$months, 
+                               levels = unique(water_quality$months))
+water_quality$stations <- factor(water_quality$stations,
+                                 levels = unique(water_quality$stations))
+
+water_quality |> 
+  head() |> 
+  kable()
+```
+
+### **Table showing the Mean, Standard Error & Standard Deviation values of selected Water Physicochemical Parameters across the Sampling Stations and Season**
+
+```{r}
+## Descriptive Statistics of the Water Physicochemical Parameters
+## Showing the mean and sd of the parameters
+water_summary <- water_quality |> 
+  group_by(stations, season) |> 
+  summarise(
+    n = n(),
+    mean_temp = round(mean(temperature), 2),
+    sd_temp = round(sd(temperature), 2),
+    se_temp = round(sd(temperature)/sqrt(n()), 2),
+    mean_do = round(mean(dissolved_oxygen), 2),
+    sd_do = round(sd(dissolved_oxygen),2),
+    se_do = round(sd(dissolved_oxygen)/sqrt(n()), 2),
+    mean_salinity = round(mean(salinity), 2),
+    sd_salinity = round(sd(salinity), 2),
+    se_salinity = round(sd(salinity)/sqrt(n()),2),
+    mean_EC = round(mean(electric_conductivity),2),
+    sd_EC = round(sd(electric_conductivity),2),
+    se_ec = round(sd(electric_conductivity)/sqrt(n()), 2),
+    mean_TDS = round(mean(total_dissolved_solid),2),
+    sd_TDS = round(sd(total_dissolved_solid),2),
+    se_tds = round(sd(total_dissolved_solid)/sqrt(n()), 2),
+    mean_pH = round(mean(p_h), 2),
+    sd_pH = round(sd(p_h), 2),
+    se_ph = round(sd(p_h)/sqrt(n()), 2),
+    mean_tub = round(mean(turbidity), 2),
+    sd_tub = round(sd(turbidity), 2),
+    se_tub = round(sd(turbidity)/sqrt(n()), 2)
+    )
+
+water_summary |> 
+  kable(
+    longtable = TRUE
+  ) 
+```
+
+### *Table Showing the Dry Season Summary Data*
+
+```{r}
+#| echo: false
+## Group according to whether Dry or Wet Seasons
+## Dry Season
+dry_summary <- water_summary |> 
+  filter(season == 'DRY')
+dry_summary |> 
+  kable()
+
+```
+
+### *Table Showing the Wet Season Summary Data*
+
+```{r}
+#| echo: false
+## Wet Season
+wet_summary <- water_summary |> 
+  filter(season == 'WET')
+wet_summary |> 
+  kable()
+```
+
+## **Test for Normality/Distribution of Data(Physicochemical Parameters) across all sampling stations and season**
+
+The normality of the water quality parameters were tested across the sampling stations and seasons using Shapiro-Wilk test. Parameters with P\>0.05 indicate a normal distribution of the data while parameters with a p value less than 0.05 indicate a non- normal distribution of the data set.
+
+### *For Temperature*
+
+```{r}
+## Check for Normality/Distribution of the Water Quality Parameters
+## across the stations and seasons
+## For Temperature
+
+temp_model <- lm(temperature ~ stations * season,
+                 data = water_quality)
+
+temp_resd <- residuals(temp_model)
+
+temp_resd |> 
+  shapiro.test()
+
+```
+
+### *For pH*
+
+```{r}
+#| echo: false
+## For pH
+
+ph_model <- lm(p_h ~ stations * season,
+               data = water_quality)
+
+ph_resd <- residuals(ph_model)
+
+ph_resd |> 
+  shapiro.test() 
+```
+
+### *For Salinity*
+
+```{r}
+#| echo: false
+## For Salinity
+
+salin_model <- lm(salinity ~ stations * season,
+                  data = water_quality)
+
+salin_resd <- residuals(salin_model)
+
+salin_resd |> 
+  shapiro.test()
+```
+
+### *For Dissolved Oxygen*
+
+```{r}
+#| echo: false
+## For dissolved Oxygen
+
+do_model <- lm(dissolved_oxygen ~ stations* season,
+               data = water_quality)
+
+do_resd <- residuals(do_model)
+
+do_resd |> 
+  shapiro.test()
+```
+
+### *For Total Dissolved Solids*
+
+```{r}
+#| echo: false
+## For Total Dissolved Solids
+
+tds_model <- lm(total_dissolved_solid ~ stations * season,
+                data = water_quality)
+
+tds_resd <- residuals(tds_model)
+
+tds_resd |> 
+  shapiro.test()
+```
+
+## **Test of Homogeneity of Variance for the Physicochemical Parameters across the Sampling Stations and the Season.**
+
+When the P value (p\>0.05) we assume the sampled data has equality of variance but when p\<0.05 we assume equality of variance was not met.
+
+### *For Temperature*
+
+```{r}
+
+temp_var <- leveneTest(water_quality$temperature ~ water_quality$stations * water_quality$season)
+
+temp_var |> 
+  kable()
+```
+
+### *For pH*
+
+```{r}
+#| echo: false
+ph_var <- leveneTest(water_quality$p_h ~ water_quality$stations * water_quality$season)
+
+ph_var |> 
+  kable()
+```
+
+### *For Salinity*
+
+```{r}
+#| echo: false
+salin_var <- leveneTest(water_quality$salinity ~ water_quality$stations * water_quality$season)
+
+salin_var |> 
+  kable()
+```
+
+### *For Dissolved Oxygen*
+
+```{r}
+#| echo: false
+do_var <- leveneTest(water_quality$dissolved_oxygen ~ water_quality$stations * water_quality$season)
+
+do_var |> 
+  kable()
+```
+
+### *For Electric Conductivity*
+
+```{r}
+#| echo: false
+ec_var <- leveneTest(water_quality$electric_conductivity ~ water_quality$stations * water_quality$season)
+
+ec_var |> 
+  kable()
+```
+
+### *For Total Dissolved Solids*
+
+```{r}
+#| echo: false
+tds_var <- leveneTest(water_quality$total_dissolved_solid ~ water_quality$stations * water_quality$season)
+
+tds_var |> 
+  kable()
+```
+
+### *For Turbidity*
+
+```{r}
+#| echo: false
+tub_var <- leveneTest(water_quality$turbidity ~ water_quality$stations * water_quality$season)
+
+tub_var |> 
+  kable()
+```
+
+## **Test of Significant differences in the mean of some-selected parameters across the Stations and Season**
+
+The means of some selected physicochemical parameters where compared across the sampling stations and season to check for significant difference. When P value i.e (p\<0.05) or equivalent, we accept that their is a significant difference in the mean of the selected parameter across either the sampling station, season or both. When P value (p\>0.05) we accept that there is no significant difference in the mean of the selected parameter across the sampling station, season or both. Two-way anova test was performed for this analysis.
+
+### *For Temperature across the five sampling stations and season.*
+
+```{r}
+## Test of Homogeneity of Variance
+
+## Check  for significant difference in the mean of temperature
+## across all the sampling stations and seasons using two way anova.
+
+## For Temperature
+
+temp_anova <- aov(temperature ~ stations * season, data = water_quality)
+
+temp_anova |> 
+  anova() |> 
+  kable()
+```
+
+### *For pH across the five sampling stations and seasons.*
+
+```{r}
+#| echo: false
+## For pH
+ph_anova <- aov(p_h ~ stations * season, data = water_quality)
+
+ph_anova |> 
+  anova() |> 
+  kable()
+
+```
+
+### *For Salinity across the five sampling stations and seasons.*
+
+```{r}
+#| echo: false
+## For Salinity
+salin_anova <- aov(salinity ~ stations * season, data = water_quality)
+
+salin_anova |> 
+  anova() |> 
+  kable()
+```
+
+### *For Dissolved Oxygen across the five sampling stations and seasons.*
+
+```{r}
+#| echo: false
+## For dissolved oxygen
+do_anova <- aov(dissolved_oxygen ~ stations * season, 
+                data = water_quality)
+do_anova |> 
+  anova() |> 
+  kable()
+```
+
+### *For Turbidity*
+
+```{r}
+tur_anova <- aov(turbidity ~ stations * season, data = water_quality)
+tur_anova |> 
+  anova() |> 
+  kable()
+```
+
+### For TDS
+
+```{r}
+tds_anova <- aov(total_dissolved_solid ~ stations * season, 
+                 data = water_quality)
+
+tds_anova |> 
+  anova() |> 
+  kable()
+```
+
+### For Conductivity
+
+```{r}
+cond_anova <- aov(electric_conductivity ~ stations * season,
+                  data = water_quality)
+
+cond_anova |> 
+  anova() |> 
+  kable()
+```
+
+## **Seasonal Variation of the different Physicochemical Parameters across the stations and season.**
+
+### *For Water Temperature*
+
+```{r}
+#| echo: false
+## Seasonal Variation of Physicochemical Parameters across the Stations
+
+temp_plot <- water_summary |> 
+  ggplot(aes(stations, mean_temp, fill = season, label = mean_temp))+
+  geom_bar(stat = 'identity', position = position_dodge(width = 0.8),
+           width = 0.7, color = 'black', size = 0.3)+
+  geom_errorbar(aes(ymin = mean_temp - se_temp, ymax = mean_temp + se_temp),
+                position = position_dodge(width = 0.8),
+                width = 0.25, size = 0.75, alpha = 0.5)+
+  geom_text(position = position_dodge(width = 0.8), vjust = -1, size = 3)+
+  scale_fill_manual(
+    values = c(
+      'DRY' = '#898f7c',
+      'WET' = '#345c7c'
+      )
+    )+
+  labs(
+    x = 'Sampling Stations',
+    y = 'Temperature Levels',
+    title = 'Seasonal Variation of Temperature 
+    across the Sampling Stations at Snake Island'
+  )+
+  theme_minimal()+
+  theme(
+    legend.position = 'right',
+    legend.text = element_text(size = 10),
+    axis.title = element_text(size = 11, face = 'bold'),
+    axis.text = element_text(size = 10),
+    panel.grid.major.y = element_line(color = 'gray90', size = 0.3),
+    panel.border = element_rect(color = 'black',  fill =NA, size = 0.5)
+  )
+
+print(temp_plot)
+```
+
+### *For Dissolved Oxygen*
+
+```{r}
+#| echo: false
+## For dissolved oxygen
+do_plot <- water_summary |> 
+  ggplot(aes(stations, mean_do, fill = season, label = mean_do))+
+  geom_bar(stat = 'identity', position = position_dodge(width = 0.8),
+           width = 0.7, color = 'black', size = 0.3)+
+  geom_errorbar(aes(ymin = mean_do - se_do, ymax = mean_do + se_do),
+                position = position_dodge(width = 0.8),
+                width = 0.25, size = 0.75, alpha = 0.5)+
+  geom_text(position = position_dodge(width = 0.8), vjust = -3.5, size = 3)+
+  scale_fill_manual(
+    values = c(
+      'DRY' = '#898f7c',
+      'WET' = '#345c7c'
+    )
+  )+
+  labs(
+    x = 'Sampling Stations',
+    y = 'Dissolved oxygen levels',
+    title = 'Seasonal Variation of d0^2 
+    across the Sampling Stations at Snake Island'
+  )+
+  theme_minimal()+
+  theme(
+    legend.position = 'right',
+    legend.text = element_text(size = 10),
+    axis.title = element_text(size = 11, face = 'bold'),
+    axis.text = element_text(size = 10),
+    panel.grid.major.y = element_line(color = 'gray90', size = 0.3),
+    panel.border = element_rect(color = 'black',  fill =NA, size = 0.5)
+  )
+
+print(do_plot)
+```
+
+### *For Salinity*
+
+```{r}
+#| echo: false
+## For Salinity
+salin_plot <- water_summary |> 
+  ggplot(aes(stations, mean_salinity, fill = season,label = mean_salinity))+
+  geom_bar(stat = 'identity', position = position_dodge(width = 0.8),
+           width = 0.7, color= 'black', size = 0.3)+
+  geom_errorbar(aes(ymin = mean_salinity - se_salinity, ymax = mean_salinity + se_salinity),
+                position = position_dodge(width = 0.8),
+                width = 0.25, size = 0.75, alpha = 0.5)+
+  geom_text(position = position_dodge(width = 0.8), vjust = -2, size = 3)+
+  scale_fill_manual(
+    values = c(
+      'DRY' = '#898f7c',
+      'WET' = '#345c7c'
+    )
+  )+
+  labs(
+    x = 'Sampling Stations',
+    y = 'Salinity Levels',
+    title = 'Seasonal Variation of salinity 
+    across the Sampling Stations at Snake Island'
+  )+
+  theme_minimal()+
+  theme(
+    legend.position = 'right',
+    legend.text = element_text(size = 10),
+    axis.title = element_text(size = 11, face = 'bold'),
+    axis.text = element_text(size = 10),
+    panel.grid.major.y = element_line(color = 'gray90', size = 0.3),
+    panel.border = element_rect(color = 'black',  fill =NA, size = 0.5)
+  )
+
+print(salin_plot)
+```
+
+### *For Electrical Conductivity*
+
+```{r}
+#| echo: false
+## For Electrical Conductivity
+ec_plot <- water_summary |> 
+  ggplot(aes(stations, mean_EC, fill = season, label = mean_EC))+
+  geom_bar(stat = 'identity', position = position_dodge(width = 0.8),
+           width = 0.7, color = 'black', size = 0.3)+
+  geom_errorbar(aes(ymin = mean_EC - se_ec, ymax = mean_EC + se_ec),
+                position = position_dodge(width = 0.8),
+                width = 0.25, size = 0.75, alpha = 0.5)+
+  geom_text(position = position_dodge(width = 0.8), vjust = -1, hjust = 1.2, size = 3)+
+  scale_fill_manual(
+    values = c(
+      'DRY' = '#898f7c',
+      'WET' = '#345c7c'
+    )
+  )+
+  labs(
+    x = 'Sampling Stations',
+    y = 'Conductivity Levels',
+    title = 'Seasonal Variation of Conductivity 
+    across the Sampling Stations at Snake Island'
+  )+
+  theme_minimal()+
+  theme(
+    legend.position = 'right',
+    legend.text = element_text(size = 10),
+    axis.title = element_text(size = 11, face = 'bold'),
+    axis.text = element_text(size = 10),
+    panel.grid.major.y = element_line(color = 'gray90', size = 0.3),
+    panel.border = element_rect(color = 'black',  fill =NA, size = 0.5)
+  )
+
+print(ec_plot)
+```
+
+### *For Turbidity*
+
+```{r}
+#| echo: false
+## For Turbidity
+tur_plot <- water_summary |> 
+  ggplot(aes(stations, mean_tub, fill = season, label = mean_tub))+
+  geom_bar(stat = 'identity', position = position_dodge(width = 0.8),
+           width = 0.7, color = 'black', size = 0.3)+
+  geom_errorbar(aes(ymin = mean_tub - se_tub, ymax = mean_tub + se_tub),
+                position = position_dodge(width = 0.8),
+                width = 0.25, size = 0.75, alpha = 0.5)+
+  geom_text(position = position_dodge(width = 0.8), vjust = -1, hjust = 1.55, size = 3)+
+  scale_fill_manual(
+    values = c(
+      'DRY' = '#898f7c',
+      'WET' = '#345c7c'
+    )
+  )+
+  labs(
+    x = 'Sampling Stations',
+    y = 'Turbidity Levels',
+    title = 'Seasonal Variation of Turbidity 
+    across the Sampling Stations at Snake Island'
+  )+
+  theme_minimal()+
+  theme(
+    legend.position = 'right',
+    legend.text = element_text(size = 10),
+    axis.title = element_text(size = 11, face = 'bold'),
+    axis.text = element_text(size = 10),
+    panel.grid.major.y = element_line(color = 'gray90', size = 0.3),
+    panel.border = element_rect(color = 'black',  fill =NA, size = 0.5)
+  )
+
+print(tur_plot)
+```
+
+### *For pH*
+
+```{r}
+#| echo: false
+## For pH
+ph_plot <- water_summary |> 
+  ggplot(aes(stations, mean_pH, fill = season, label = mean_pH))+
+  geom_bar(stat = 'identity', position = position_dodge(width = 0.8),
+           width = 0.7, color = 'black', size = 0.3)+
+  geom_errorbar(aes(ymin = mean_pH - se_ph, ymax = mean_pH + se_ph),
+                position = position_dodge(width = 0.8),
+                width = 0.25, size = 0.75, alpha = 0.4)+
+  geom_text(position = position_dodge(width = 0.8), vjust = -1, size = 3)+
+  scale_fill_manual(
+    values = c(
+      'DRY' = '#898f7c',
+      'WET' = '#345c7c'
+    )
+  )+
+  labs(
+    x = 'Sampling Stations',
+    y = 'pH Levels',
+    title = 'Seasonal Variation of pH 
+    across the Sampling Stations at Snake Island'
+  )+
+  theme_minimal()+
+  theme(
+    legend.position = 'right',
+    legend.text = element_text(size = 10),
+    axis.title = element_text(size = 11, face = 'bold'),
+    axis.text = element_text(size = 10),
+    panel.grid.major.y = element_line(color = 'gray90', size = 0.3),
+    panel.border = element_rect(color = 'black',  fill =NA, size = 0.5)
+  )
+
+print(ph_plot)
+```
+
+### *For Total Dissolved Solids*
+
+```{r}
+#| echo: false
+## For Total dissolved solid
+tds_plot <- water_summary |> 
+  ggplot(aes(stations, mean_TDS, fill = season, label = mean_TDS))+
+  geom_bar(stat = 'identity', position = position_dodge(width = 0.8),
+           width = 0.7, color = 'black', size = 0.3)+
+  geom_errorbar(aes(ymin = mean_TDS - se_tds, ymax = mean_TDS + se_tds),
+                position = position_dodge(width = 0.8),
+                width = 0.25, size = 0.75, alpha = 0.5)+
+  geom_text(position = position_dodge(width = 0.8), vjust = -1, hjust = 1.2, size = 3)+
+  scale_fill_manual(
+    values = c(
+      'DRY' = '#898f7c',
+      'WET' = '#345c7c'
+    )
+  )+
+  labs(
+    x = 'Sampling Stations',
+    y = 'Total dissolved solid',
+    title = 'Seasonal Variation of TDS 
+    across the Sampling Stations at Snake Island'
+  )+
+  theme_minimal()+
+  theme(
+    legend.position = 'right',
+    legend.text = element_text(size = 10),
+    axis.title = element_text(size = 11, face = 'bold'),
+    axis.text = element_text(size = 10),
+    panel.grid.major.y = element_line(color = 'gray90', size = 0.3),
+    panel.border = element_rect(color = 'black',  fill =NA, size = 0.5)
+  )
+
+print(tds_plot)
+```
+
+## **Monthly Variation of Selected Water Physicochemical Parameters across the stations.**
+
+### *For Water Temperature*
+
+```{r}
+#| echo: false
+## Monthly Variations of Physicochemical Parameters across the Stations.
+
+water_quality |>
+  ggplot(aes(months, temperature, color = stations, group = stations))+
+  geom_line(size = 0.25)+
+  geom_point(size = 2.0)+
+  labs(x = "Months.", y = "Temperature") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 9),
+    legend.key.size = unit(0.8, "cm"),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+    axis.text.y = element_text(size = 10),
+    panel.grid.major.y = element_line(color = "gray90", size = 0.3),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5)
+  )
+
+```
+
+### *For pH*
+
+```{r}
+#| echo: false
+water_quality |> 
+  ggplot(aes(months, p_h, color = stations, group = stations))+
+  geom_line(size = 0.25)+
+  geom_point(size = 2.0)+
+  labs(x = "Months.", y = "pH") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 9),
+    legend.key.size = unit(0.8, "cm"),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+    axis.text.y = element_text(size = 10),
+    panel.grid.major.y = element_line(color = "gray90", size = 0.3),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5)
+  )
+```
+
+### *For Dissolved Oxygen*
+
+```{r}
+#| echo: false
+water_quality |> 
+  ggplot(aes(months, dissolved_oxygen, color = stations, group = stations))+
+  geom_line(size = 0.25)+
+  geom_point(size = 2.0)+
+  labs(x = "Months.", y = "Dissolved oxygen(ppt)") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 9),
+    legend.key.size = unit(0.8, "cm"),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+    axis.text.y = element_text(size = 10),
+    panel.grid.major.y = element_line(color = "gray90", size = 0.3),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5)
+  )
+```
+
+### *For Salinity*
+
+```{r}
+#| echo: false
+water_quality |> 
+  ggplot(aes(months, salinity, color = stations, group = stations))+
+  geom_line(size = 0.25)+
+  geom_point(size = 2.0)+
+  labs(x = "Months.", y = "Salinity") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 9),
+    legend.key.size = unit(0.8, "cm"),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+    axis.text.y = element_text(size = 10),
+    panel.grid.major.y = element_line(color = "gray90", size = 0.3),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5)
+  )
+
+```
+
+### *For Electrical Conductivity*
+
+```{r}
+#| echo: false
+water_quality |> 
+  ggplot(aes(months, electric_conductivity, colour = stations, group = stations))+
+  geom_line(size = 0.25)+
+  geom_point(size = 2.0)+
+  labs(x = "Months.", y = "Conductivity") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 9),
+    legend.key.size = unit(0.8, "cm"),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+    axis.text.y = element_text(size = 10),
+    panel.grid.major.y = element_line(color = "gray90", size = 0.3),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5)
+  )
+```
+
+### *For Turbidity*
+
+```{r}
+#| echo: false
+water_quality |> 
+  ggplot(aes(months, turbidity, color = stations, group = stations))+
+  geom_line(size = 0.25)+
+  geom_point(size = 2.0)+
+  labs(x = "Months.", y = "turbidity") +
+  theme_classic() +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 9),
+    legend.key.size = unit(0.8, "cm"),
+    axis.title = element_text(size = 11, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+    axis.text.y = element_text(size = 10),
+    panel.grid.major.y = element_line(color = "gray90", size = 0.3),
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5)
+  )
+```
+
+## **Correlation Table showing the relationship between the physicohemical parameters across all stations during the Wet and Dry Season.**
+
+```{r}
+## Correlation Analysis.
+corr_martrix <- cor(water_quality[, c( "dissolved_oxygen", "p_h", "salinity",             
+                                      "temperature", "electric_conductivity", "total_dissolved_solid", 
+                                      "turbidity")])
+corr_martrix |> 
+  kable()
+```
+
+### *For Dry Season*
+
+```{r}
+#| echo: false
+## For  Dry Season
+dry_water <- water_quality |> 
+  filter(season == 'DRY')
+
+corr_mart_dry <- cor(dry_water[, c("dissolved_oxygen", "p_h", "salinity",             
+                                   "temperature", "electric_conductivity", "total_dissolved_solid", 
+                                   "turbidity")])
+corr_mart_dry |> 
+  kable()
+```
+
+### *For Wet Season*
+
+```{r}
+#| echo: false
+## For Wet Season
+wet_water <- water_quality |> 
+  filter(season == 'WET')
+
+corr_mart_wet <- cor(wet_water[, c("dissolved_oxygen", "p_h", "salinity",             
+                                   "temperature", "electric_conductivity", "total_dissolved_solid", 
+                                   "turbidity")])
+
+corr_mart_wet |> 
+  kable()
+```
