@@ -10,6 +10,8 @@ library(vegan)
 library(tidyverse)
 library(grid)
 
+## Note: Data as been imported from previous Rscripts as Plankton_data_new
+
 # Calculate diversity for POOLED data (all stations combined)
 pooled_data <- colSums(plankton_data_new)  # Sum across all stations
 pooled_matrix <- matrix(pooled_data, nrow = 1)  # Convert to matrix format
@@ -390,4 +392,5 @@ write.csv(abundant_diversity_individual, 'abundant_diversity_individual.csv')
 write.csv(intermediate_diversity_with_pooled, 'intermediate_diversity_with_pooled.csv')
 write.csv(taxa_classification, 'taxa_classification.csv')
 write.csv(intermediate_stats, 'intermediate_stats.csv')
+
 
