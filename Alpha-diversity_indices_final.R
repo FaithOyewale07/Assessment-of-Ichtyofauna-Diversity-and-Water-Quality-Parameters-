@@ -1,5 +1,5 @@
 # ==========================================
-# ALPHA DIVERSITY INDICES WITH POOLED COLUMN
+# ALPHA DIVERSITY INDICES WITH POOLED
 # Including All Stations Combined
 # ==========================================
 library(ggplot2)
@@ -85,7 +85,7 @@ print(stat_results)
 write.csv(stat_results, 'statistic_result_no_pooled.csv')
 
 # ==========================================
-# STEP 4: CREATE PANEL A - DIVERSITY WITH POOLED
+# STEP 4:  DIVERSITY WITH POOLED
 # ==========================================
 
 cat("\n=== CREATING PANEL A WITH POOLED ===\n")
@@ -390,3 +390,4 @@ write.csv(abundant_diversity_individual, 'abundant_diversity_individual.csv')
 write.csv(intermediate_diversity_with_pooled, 'intermediate_diversity_with_pooled.csv')
 write.csv(taxa_classification, 'taxa_classification.csv')
 write.csv(intermediate_stats, 'intermediate_stats.csv')
+
